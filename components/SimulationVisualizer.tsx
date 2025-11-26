@@ -12,12 +12,10 @@ export const SimulationVisualizer: React.FC<Props> = ({ mix, currentTemp, phase 
   // As temp goes down, color might saturate or become "icy" (whiter/blue tint)
   // Animation speed slows down as it freezes
   
-  const rotationSpeed = phase === 'liquid' ? '2s' : phase === 'soft' ? '4s' : '0s';
+  const rotationDuration = phase === 'liquid' ? '2s' : '4s';
+  const isPaused = phase === 'hard';
   const opacity = phase === 'liquid' ? 0.8 : phase === 'soft' ? 0.9 : 1;
   const scale = phase === 'liquid' ? 1 : phase === 'soft' ? 0.95 : 0.9; // Contracts slightly
-
-  // Note: "Puré de Fruta" must match IngredientType.FRUIT value
-  const isFruit = mix.ingredients[0].type === 'Puré de Fruta';
 
   return (
     <div className="relative w-64 h-64 mx-auto flex items-center justify-center">
@@ -29,18 +27,20 @@ export const SimulationVisualizer: React.FC<Props> = ({ mix, currentTemp, phase 
         
         {/* The Ice Cream Mixture */}
         <div 
-            className="w-full h-full transition-all duration-1000 ease-in-out relative"
+            className="w-full h-full rounded-full transition-all duration-1000 ease-in-out relative overflow-hidden"
             style={{
-                backgroundColor: isFruit ? '#FDA4AF' : '#FDF4E3',
+                backgroundColor: mix.color,
                 transform: `scale(${scale})`,
-                opacity: opacity
+                opacity: opacity,
+                borderRadius: '50%'
             }}
         >
             {/* Texture overlay */}
             <div 
                 className="absolute inset-0 w-[200%] h-[200%] bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20"
                 style={{
-                    animation: `spin ${rotationSpeed} linear infinite`,
+                    animation: `spinTexture ${rotationDuration} linear infinite`,
+                    animationPlayState: isPaused ? 'paused' : 'running',
                     transformOrigin: 'center center'
                 }}
             ></div>
@@ -53,14 +53,21 @@ export const SimulationVisualizer: React.FC<Props> = ({ mix, currentTemp, phase 
         </div>
 
         {/* Stirrer */}
-        <div className={`absolute w-2 h-32 bg-slate-400 rounded-full origin-top transform -translate-y-1/2 top-1/2 ${phase === 'hard' ? '' : 'animate-spin'}`} 
-             style={{ animationDuration: rotationSpeed }}>
+        <div className="absolute w-2 h-32 bg-slate-400 rounded-full origin-top top-1/2 left-1/2 -ml-1" 
+             style={{ 
+                 animation: `spinStirrer ${rotationDuration} linear infinite`,
+                 animationPlayState: isPaused ? 'paused' : 'running'
+             }}>
              <div className="absolute bottom-0 w-8 h-6 bg-slate-500 rounded -left-3"></div>   
         </div>
       </div>
       
       <style>{`
-        @keyframes spin {
+        @keyframes spinTexture {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        @keyframes spinStirrer {
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
         }
